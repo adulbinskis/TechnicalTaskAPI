@@ -29,7 +29,7 @@ namespace TechnicalTaskAPI.Tests.Fixtures
             serviceCollection.AddSingleton(Configuration);
 
             // Token Service
-            serviceCollection.AddScoped<TokenService,TokenService>();
+            serviceCollection.AddScoped<ITokenService,TokenService>();
 
             // Base Entity
             serviceCollection.AddScoped<IBaseEntityService, BaseEntityService>();

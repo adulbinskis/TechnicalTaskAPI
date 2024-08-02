@@ -26,9 +26,9 @@ namespace TechnicalTaskAPI.Application.Identity.Commands
 
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ApplicationDbContext _context;
-        private readonly TokenService _tokenService;
+        private readonly ITokenService _tokenService;
 
-        public Authenticate(UserManager<ApplicationUser> userManager, ApplicationDbContext context, TokenService tokenService)
+        public Authenticate(UserManager<ApplicationUser> userManager, ApplicationDbContext context, ITokenService tokenService)
         {
             _userManager = userManager;
             _context = context;
