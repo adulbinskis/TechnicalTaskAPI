@@ -1,0 +1,6 @@
+@TechnicalTaskAPI_HostAddress = http://localhost:5234
+
+GET {{TechnicalTaskAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
