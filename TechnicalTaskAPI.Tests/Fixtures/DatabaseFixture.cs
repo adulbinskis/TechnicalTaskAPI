@@ -6,22 +6,34 @@ using TechnicalTaskAPI.ORM.Services;
 using MediatR;
 using TechnicalTaskAPI.Application.Identity.Commands;
 using TechnicalTaskAPI.Application.Identity.Services;
+using Microsoft.Extensions.Configuration;
 
 namespace TechnicalTaskAPI.Tests.Fixtures
 {
     public class DatabaseFixture : IDisposable
     {
+        public IConfiguration Configuration { get; private set; }
+
         public ServiceProvider ServiceProvider { get; private set; }
 
         public DatabaseFixture()
         {
             var serviceCollection = new ServiceCollection();
 
+            var configurationBuilder = new ConfigurationBuilder()
+               .SetBasePath(AppContext.BaseDirectory)
+               .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+               .AddEnvironmentVariables();
+
+            Configuration = configurationBuilder.Build();
+            serviceCollection.AddSingleton(Configuration);
+
             // Token Service
-            serviceCollection.AddScoped<ITokenService,TokenService>();
+            serviceCollection.AddScoped<TokenService,TokenService>();
 
             // Base Entity
             serviceCollection.AddScoped<IBaseEntityService, BaseEntityService>();
+   
 
             // Add logging
             serviceCollection.AddLogging();

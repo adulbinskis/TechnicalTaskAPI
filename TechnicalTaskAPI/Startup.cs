@@ -66,9 +66,6 @@ namespace TechnicalTaskAPI
             });
 
 
-            services.AddScoped<ITokenService, TokenService>();
-            services.AddScoped<IBaseEntityService, BaseEntityService>();
-
             services.AddProblemDetails();
             services.AddRouting(options => options.LowercaseUrls = true);
 
@@ -95,6 +92,9 @@ namespace TechnicalTaskAPI
             })
             .AddRoles<IdentityRole>()
             .AddEntityFrameworkStores<ApplicationDbContext>();
+
+            services.AddScoped<ITokenService, TokenService>();
+            services.AddScoped<IBaseEntityService, BaseEntityService>();
 
             services.AddAuthentication(options =>
             {
