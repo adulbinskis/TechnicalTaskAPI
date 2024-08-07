@@ -1,6 +1,4 @@
 ﻿using MediatR;
-using Microsoft.EntityFrameworkCore;
-using TechnicalTaskAPI.Application.Identity.Models;
 using TechnicalTaskAPI.Application.Identity.Services;
 using TechnicalTaskAPI.ORM.Services;
 
@@ -13,13 +11,14 @@ namespace TechnicalTaskAPI.Application.Identity.Commands
             public string RefreshToken { get; set; }
         }
 
-        private readonly TokenService _tokenService;
         private readonly ApplicationDbContext _context;
+        private readonly ITokenService _tokenService;
 
-        public Logout(TokenService tokenService, ApplicationDbContext context)
+        public Logout(ITokenService tokenService, ApplicationDbContext context)
         {
-            _tokenService = tokenService;
             _context = context;
+            _tokenService = tokenService;
+
         }
 
         public async Task<bool> Handle(Command request, CancellationToken cancellationToken)

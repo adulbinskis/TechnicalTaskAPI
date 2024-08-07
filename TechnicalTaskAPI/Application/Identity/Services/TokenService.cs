@@ -20,7 +20,7 @@ namespace TechnicalTaskAPI.Application.Identity.Services
     public class TokenService : ITokenService
     {
         // Adjustexpiration if needed
-        private const double ExpirationMinutes = 7;
+        private const double ExpirationMinutes = 1;
         private readonly ILogger<TokenService> _logger;
         private readonly IConfiguration _configuration;
         private readonly ApplicationDbContext _context;
@@ -123,11 +123,8 @@ namespace TechnicalTaskAPI.Application.Identity.Services
 
         public async Task RevokeRefreshTokenAsync(string refreshToken)
         {
-            //var idUser = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-
             var user = await _context.Users
                 .SingleOrDefaultAsync(
-                //x => x.Id == idUser && 
                 x => x.RefreshToken == refreshToken);
 
             if (user != null)

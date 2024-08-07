@@ -13,10 +13,10 @@ namespace TechnicalTaskAPI.Application.Identity.Commands
             public string RefreshToken { get; set; }
         }
 
-        private readonly TokenService _tokenService;
+        private readonly ITokenService _tokenService;
         private readonly ApplicationDbContext _context;
 
-        public Refresh(TokenService tokenService, ApplicationDbContext context)
+        public Refresh(ITokenService tokenService, ApplicationDbContext context)
         {
             _tokenService = tokenService;
             _context = context;

@@ -19,7 +19,7 @@ namespace TechnicalTaskAPI.Application.Identity.Commands
                 public Validator()
                 {
                     RuleFor(x => x.Email).NotEmpty().EmailAddress();
-                    RuleFor(x => x.Password).MinimumLength(6).MaximumLength(254);
+                    RuleFor(x => x.Password).NotEmpty().MinimumLength(6).MaximumLength(254);
                 }
             }
         }
