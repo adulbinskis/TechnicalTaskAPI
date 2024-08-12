@@ -75,7 +75,6 @@ namespace TechnicalTaskAPI.Tests.Tests.Identity
             Assert.NotNull(result.Token);
             Assert.NotNull(result.RefreshToken);
 
-            // Verify database changes
             var user = await _context.Users.SingleOrDefaultAsync(u => u.Email == TestUserConstants.Refresh_User_Email);
             Assert.NotNull(user);
             Assert.Equal(result.RefreshToken, user.RefreshToken);
@@ -123,7 +122,6 @@ namespace TechnicalTaskAPI.Tests.Tests.Identity
         [Fact]
         public async Task Refresh_ExpiredToken_ThrowsException()
         {
-            // Arrange
             SeedData(TestUserConstants.ExpiredRefreshToken, DateTime.UtcNow.AddDays(-1));
 
             var command = new Refresh.Command 
@@ -131,7 +129,6 @@ namespace TechnicalTaskAPI.Tests.Tests.Identity
                 RefreshToken = TestUserConstants.ExpiredRefreshToken 
             };
 
-            // Act & Assert
             var exception = await Assert.ThrowsAsync<Exception>(() => _mediator.Send(command));
             Assert.Equal("Token not valid", exception.Message);
         }
@@ -139,7 +136,6 @@ namespace TechnicalTaskAPI.Tests.Tests.Identity
         [Fact]
         public async Task Refresh_ValidToken_RevokesOldToken()
         {
-            // Arrange
             SeedData(TestUserConstants.ValidRefreshToken, DateTime.UtcNow.AddDays(1));
 
             var command = new Refresh.Command 
@@ -147,10 +143,8 @@ namespace TechnicalTaskAPI.Tests.Tests.Identity
                 RefreshToken = TestUserConstants.ValidRefreshToken 
             };
 
-            // Act
             var result = await _mediator.Send(command);
 
-            // Assert
             Assert.NotNull(result);
 
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == TestUserConstants.Refresh_User_Email);
