@@ -15,6 +15,8 @@ namespace TechnicalTaskAPI.Tests.Fixtures
         public IConfiguration Configuration { get; private set; }
         public ServiceProvider ServiceProvider { get; private set; }
 
+        private readonly string _connectionString = "Data Source=localhost;Initial Catalog=TehnicalTaskDbTests;Integrated Security=True;Trust Server Certificate=True";
+
         public DatabaseFixture()
         {
             var serviceCollection = new ServiceCollection();
@@ -37,9 +39,12 @@ namespace TechnicalTaskAPI.Tests.Fixtures
             // Add logging
             serviceCollection.AddLogging();
 
-            // Add DbContext
+            //// Add DbContext
+            //serviceCollection.AddDbContext<ApplicationDbContext>(options =>
+            //    options.UseInMemoryDatabase("TestDatabase"));
+
             serviceCollection.AddDbContext<ApplicationDbContext>(options =>
-                options.UseInMemoryDatabase("TestDatabase"));
+                options.UseSqlServer(_connectionString));
 
             // Add Identity
             serviceCollection.AddIdentity<ApplicationUser, IdentityRole>()

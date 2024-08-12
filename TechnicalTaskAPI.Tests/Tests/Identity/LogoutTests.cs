@@ -1,7 +1,9 @@
 ﻿using MediatR;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using TechnicalTaskAPI.Application.Identity.Commands;
+using TechnicalTaskAPI.Application.Identity.Roles;
 using TechnicalTaskAPI.Application.Identity.Services;
 using TechnicalTaskAPI.ORM.Entities;
 using TechnicalTaskAPI.ORM.Services;
@@ -16,26 +18,45 @@ namespace TechnicalTaskAPI.Tests.Tests.Identity
         private readonly IMediator _mediator;
         private readonly ApplicationDbContext _context;
         private readonly ITokenService _tokenService;
+        private readonly UserManager<ApplicationUser> _userManager;
 
         public LogoutTests(DatabaseFixture fixture)
         {
             _mediator = fixture.ServiceProvider.GetRequiredService<IMediator>();
             _context = fixture.ServiceProvider.GetRequiredService<ApplicationDbContext>();
             _tokenService = fixture.ServiceProvider.GetRequiredService<ITokenService>();
+            _userManager = fixture.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
         }
 
         private async Task SeedUserWithRefreshToken(string refreshToken, DateTime expirationDate)
         {
-            var user = new ApplicationUser
+            var existingUser = await _userManager.FindByEmailAsync(TestUserConstants.Logout_User_Email);
+            if (existingUser == null)
             {
-                UserName = TestUserConstants.Logout_User_Username,
-                Email = TestUserConstants.Logout_User_Email,
-                RefreshToken = refreshToken,
-                RefreshTokenExpirationDate = expirationDate
-            };
+                var user = new ApplicationUser
+                {
+                    UserName = TestUserConstants.Logout_User_Username,
+                    Email = TestUserConstants.Logout_User_Email,
+                    Role = Role.User,
+                    EmailConfirmed = true,
+                    TwoFactorEnabled = false,
+                    LockoutEnabled = false,
+                    RefreshToken = refreshToken,
+                    RefreshTokenExpirationDate = expirationDate
+                };
 
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
+                var result = await _userManager.CreateAsync(user, TestUserConstants.Default_Password);
+
+                if (!result.Succeeded)
+                {
+                    Console.WriteLine("Failed to create user in seeding " + result.Errors);
+                }
+            }
+            else
+            {
+                existingUser.RefreshToken = refreshToken;
+                existingUser.RefreshTokenExpirationDate = expirationDate;
+            }
         }
 
         [Fact]

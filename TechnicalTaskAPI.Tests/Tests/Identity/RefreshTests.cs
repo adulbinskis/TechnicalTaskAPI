@@ -25,10 +25,9 @@ namespace TechnicalTaskAPI.Tests.Tests.Identity
             _userManager = fixture.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
         }
 
-        private void SeedData(string refreshToken, DateTime expiration)
+        private async Task SeedData(string refreshToken, DateTime expiration)
         {
-            var userManager = _userManager;
-            var existingUser = userManager.FindByEmailAsync(TestUserConstants.Refresh_User_Email).Result;
+            var existingUser = await _userManager.FindByEmailAsync(TestUserConstants.Refresh_User_Email);
             if (existingUser == null)
             {
                 var user = new ApplicationUser
@@ -43,7 +42,7 @@ namespace TechnicalTaskAPI.Tests.Tests.Identity
                     RefreshTokenExpirationDate = expiration
                 };
 
-                var result = userManager.CreateAsync(user, TestUserConstants.Default_Password).Result;
+                var result = await _userManager.CreateAsync(user, TestUserConstants.Default_Password);
 
                 if (!result.Succeeded)
                 {
@@ -60,7 +59,7 @@ namespace TechnicalTaskAPI.Tests.Tests.Identity
         [Fact]
         public async Task Refresh_Success()
         {
-            SeedData(TestUserConstants.ValidRefreshToken, DateTime.UtcNow.AddDays(1));
+            await SeedData(TestUserConstants.ValidRefreshToken, DateTime.UtcNow.AddDays(1));
 
             var command = new Refresh.Command 
             { 
@@ -108,7 +107,7 @@ namespace TechnicalTaskAPI.Tests.Tests.Identity
         [Fact]
         public async Task Refresh_InvalidToken_ThrowsException()
         {
-            SeedData(TestUserConstants.ValidRefreshToken, DateTime.UtcNow.AddDays(1));
+            await SeedData(TestUserConstants.ValidRefreshToken, DateTime.UtcNow.AddDays(1));
 
             var command = new Refresh.Command 
             {
@@ -122,7 +121,7 @@ namespace TechnicalTaskAPI.Tests.Tests.Identity
         [Fact]
         public async Task Refresh_ExpiredToken_ThrowsException()
         {
-            SeedData(TestUserConstants.ExpiredRefreshToken, DateTime.UtcNow.AddDays(-1));
+            await SeedData(TestUserConstants.ExpiredRefreshToken, DateTime.UtcNow.AddDays(-1));
 
             var command = new Refresh.Command 
             { 
@@ -136,7 +135,7 @@ namespace TechnicalTaskAPI.Tests.Tests.Identity
         [Fact]
         public async Task Refresh_ValidToken_RevokesOldToken()
         {
-            SeedData(TestUserConstants.ValidRefreshToken, DateTime.UtcNow.AddDays(1));
+            await SeedData(TestUserConstants.ValidRefreshToken, DateTime.UtcNow.AddDays(1));
 
             var command = new Refresh.Command 
             { 
