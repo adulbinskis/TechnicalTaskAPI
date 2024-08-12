@@ -29,7 +29,8 @@ namespace TechnicalTaskAPI.Application.Identity.Commands
                 throw new Exception("Token is null");
             }
 
-            var user = await _context.Users.FirstOrDefaultAsync(x => x.RefreshToken == request.RefreshToken);
+            var userList = await _context.Users.ToListAsync(cancellationToken);
+            var user = userList.Where(a => a.RefreshToken == request.RefreshToken).FirstOrDefault();
 
             if (user == null)
             {

@@ -1,17 +1,17 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using TechnicalTaskAPI.Application.Identity.Commands;
 using TechnicalTaskAPI.Application.Identity.Roles;
 using TechnicalTaskAPI.ORM.Entities;
 using TechnicalTaskAPI.ORM.Services;
+using TechnicalTaskAPI.Tests.Constants;
 using TechnicalTaskAPI.Tests.Fixtures;
-using Xunit;
 
 namespace TechnicalTaskAPI.Tests.Tests.Identity
 {
-    public class AuthenticateTests : IClassFixture<DatabaseFixture>
+    [Collection("Database collection")]
+    public class AuthenticateTests
     {
         private readonly IMediator _mediator;
         private readonly ApplicationDbContext _dbContext;
@@ -22,43 +22,54 @@ namespace TechnicalTaskAPI.Tests.Tests.Identity
             _mediator = fixture.ServiceProvider.GetRequiredService<IMediator>();
             _dbContext = fixture.ServiceProvider.GetRequiredService<ApplicationDbContext>();
             _userManager = fixture.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+
+            SeedData().Wait();
         }
 
-        private async Task ResetDatabase()
+        private async Task SeedData()
         {
-            _dbContext.Users.RemoveRange(_dbContext.Users);
-            await _dbContext.SaveChangesAsync();
-
-            var user = new ApplicationUser
+            var existingUser = await _userManager.FindByEmailAsync(TestUserConstants.Default_Email);
+            if (existingUser == null)
             {
-                UserName = "testuser",
-                Email = "testuser@example.com",
-                Role = Role.User,
-                EmailConfirmed = true,
-                TwoFactorEnabled = false,
-                LockoutEnabled = false
-            };
+                var user = new ApplicationUser
+                {
+                    UserName = TestUserConstants.Default_Username,
+                    Email = TestUserConstants.Default_Email,
+                    Role = Role.User,
+                    EmailConfirmed = true,
+                    TwoFactorEnabled = false,
+                    LockoutEnabled = false
+                };
 
-            var result = await _userManager.CreateAsync(user, "P@ssw0rd");
-            if (!result.Succeeded)
-            {
-                throw new Exception("Failed to create user in seeding");
+                var result = await _userManager.CreateAsync(user, TestUserConstants.Default_Password);
+
+                if (!result.Succeeded)
+                {
+                    Console.WriteLine("Failed to create user in seeding " + result.Errors);
+                }
+
+                await _dbContext.SaveChangesAsync();
             }
-
-            await _dbContext.SaveChangesAsync();
+            else
+            {
+                Console.WriteLine("User already exists, skipping seeding.");
+            }
         }
 
         [Fact]
         public async Task Authenticate_Success()
         {
-            await ResetDatabase();
-            var command = new Authenticate.Command { Email = "testuser@example.com", Password = "P@ssw0rd" };
+            var command = new Authenticate.Command 
+            { 
+                Email = TestUserConstants.Default_Email, 
+                Password = TestUserConstants.Default_Password 
+            };
 
             var result = await _mediator.Send(command);
 
             Assert.NotNull(result);
-            Assert.Equal("testuser@example.com", result.Email);
-            Assert.Equal("testuser", result.UserName);
+            Assert.Equal(TestUserConstants.Default_Email, result.Email);
+            Assert.Equal(TestUserConstants.Default_Username, result.UserName);
             Assert.NotNull(result.Token);
             Assert.NotNull(result.RefreshToken);
         }
@@ -66,7 +77,11 @@ namespace TechnicalTaskAPI.Tests.Tests.Identity
         [Fact]
         public async Task Authenticate_InvalidEmailFormat()
         {
-            var command = new Authenticate.Command { Email = "invalid-email", Password = "P@ssw0rd" };
+            var command = new Authenticate.Command { 
+                Email = TestUserConstants.InvalidEmailFormat, 
+                Password = TestUserConstants.Default_Password 
+            };
+
             var validator = new Authenticate.Command.Validator();
 
             var validationResult = await validator.ValidateAsync(command);
@@ -78,8 +93,11 @@ namespace TechnicalTaskAPI.Tests.Tests.Identity
         [Fact]
         public async Task Authenticate_IncorrectPassword()
         {
-            await ResetDatabase();
-            var command = new Authenticate.Command { Email = "testuser@example.com", Password = "wrongpassword" };
+            var command = new Authenticate.Command 
+            { 
+                Email = TestUserConstants.Default_Email, 
+                Password = TestUserConstants.IncorrectPassword 
+            };
 
             var result = await _mediator.Send(command);
 
@@ -89,8 +107,11 @@ namespace TechnicalTaskAPI.Tests.Tests.Identity
         [Fact]
         public async Task Authenticate_NonExistingUser()
         {
-            await ResetDatabase();
-            var command = new Authenticate.Command { Email = "nonexisting@example.com", Password = "P@ssw0rd" };
+            var command = new Authenticate.Command 
+            { 
+                Email = TestUserConstants.NonExistingUser, 
+                Password = TestUserConstants.Default_Password 
+            };
 
             var result = await _mediator.Send(command);
 
@@ -100,7 +121,11 @@ namespace TechnicalTaskAPI.Tests.Tests.Identity
         [Fact]
         public async Task Authenticate_MissingEmail()
         {
-            var command = new Authenticate.Command { Password = "P@ssw0rd" };
+            var command = new Authenticate.Command 
+            { 
+                Password = TestUserConstants.Default_Password 
+            };
+
             var validator = new Authenticate.Command.Validator();
 
             var validationResult = await validator.ValidateAsync(command);
@@ -112,7 +137,11 @@ namespace TechnicalTaskAPI.Tests.Tests.Identity
         [Fact]
         public async Task Authenticate_MissingPassword()
         {
-            var command = new Authenticate.Command { Email = "testuser@example.com" };
+            var command = new Authenticate.Command 
+            { 
+                Email = TestUserConstants.Default_Email
+            };
+
             var validator = new Authenticate.Command.Validator();
 
             var validationResult = await validator.ValidateAsync(command);
@@ -124,7 +153,12 @@ namespace TechnicalTaskAPI.Tests.Tests.Identity
         [Fact]
         public async Task Authenticate_EmptyEmail()
         {
-            var command = new Authenticate.Command { Email = "", Password = "P@ssw0rd" };
+            var command = new Authenticate.Command 
+            { 
+                Email = TestUserConstants.EmptyString, 
+                Password = TestUserConstants.Default_Password 
+            };
+
             var validator = new Authenticate.Command.Validator();
 
             var validationResult = await validator.ValidateAsync(command);
@@ -136,7 +170,12 @@ namespace TechnicalTaskAPI.Tests.Tests.Identity
         [Fact]
         public async Task Authenticate_EmptyPassword()
         {
-            var command = new Authenticate.Command { Email = "testuser@example.com", Password = "" };
+            var command = new Authenticate.Command 
+            { 
+                Email = TestUserConstants.Default_Email, 
+                Password = TestUserConstants.EmptyString 
+            };
+
             var validator = new Authenticate.Command.Validator();
 
             var validationResult = await validator.ValidateAsync(command);
@@ -148,7 +187,12 @@ namespace TechnicalTaskAPI.Tests.Tests.Identity
         [Fact]
         public async Task Authenticate_ShortPassword()
         {
-            var command = new Authenticate.Command { Email = "testuser@example.com", Password = "short" };
+            var command = new Authenticate.Command 
+            { 
+                Email = TestUserConstants.Default_Email, 
+                Password = TestUserConstants.ShortPassword 
+            };
+
             var validator = new Authenticate.Command.Validator();
 
             var validationResult = await validator.ValidateAsync(command);
@@ -160,7 +204,12 @@ namespace TechnicalTaskAPI.Tests.Tests.Identity
         [Fact]
         public async Task Authenticate_LongPassword()
         {
-            var command = new Authenticate.Command { Email = "testuser@example.com", Password = new string('a', 255) };
+            var command = new Authenticate.Command 
+            { 
+                Email = TestUserConstants.Default_Email,
+                Password = TestUserConstants.LongPassword
+            };
+
             var validator = new Authenticate.Command.Validator();
 
             var validationResult = await validator.ValidateAsync(command);

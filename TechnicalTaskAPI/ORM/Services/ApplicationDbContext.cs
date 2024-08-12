@@ -20,6 +20,10 @@ namespace TechnicalTaskAPI.ORM.Services
         {
             base.OnModelCreating(modelBuilder);
 
+            modelBuilder.Entity<ApplicationUser>()
+                .HasIndex(u => u.Email)
+                .IsUnique();
+
             //modelBuilder.ApplyConfiguration(new QuestionConfiguration());
             //modelBuilder.ApplyConfiguration(new AnswerConfiguration());
         }

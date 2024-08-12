@@ -1,17 +1,16 @@
-﻿using FluentValidation;
-using MediatR;
+﻿using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 using TechnicalTaskAPI.Application.Identity.Commands;
-using TechnicalTaskAPI.Application.Identity.Models;
 using TechnicalTaskAPI.Application.Identity.Roles;
 using TechnicalTaskAPI.ORM.Entities;
+using TechnicalTaskAPI.Tests.Constants;
 using TechnicalTaskAPI.Tests.Fixtures;
-using Xunit;
 
 namespace TechnicalTaskAPI.Tests.Tests.Identity
 {
-    public class RegisterTests : IClassFixture<DatabaseFixture>
+    [Collection("Database collection")]
+    public class RegisterTests
     {
         private readonly IMediator _mediator;
         private readonly UserManager<ApplicationUser> _userManager;
@@ -24,14 +23,19 @@ namespace TechnicalTaskAPI.Tests.Tests.Identity
 
         [Fact]
         public async Task Register_Success()
-        { 
-            var command = new Register.Command { Username = "newuser", Email = "newuser@example.com", Password = "P@ssw0rd1" };
+        {
+            var command = new Register.Command
+            {
+                Username = TestUserConstants.New_User_Username,
+                Email = TestUserConstants.New_User_Email,
+                Password = TestUserConstants.Default_Password
+            };
 
             var result = await _mediator.Send(command);
 
             Assert.NotNull(result);
-            Assert.Equal("newuser", result.Username);
-            Assert.Equal("newuser@example.com", result.Email);
+            Assert.Equal(TestUserConstants.New_User_Username, result.Username);
+            Assert.Equal(TestUserConstants.New_User_Email, result.Email);
             Assert.Equal(Role.User, result.Role);
 
             var user = await _userManager.FindByEmailAsync(result.Email);
@@ -43,8 +47,14 @@ namespace TechnicalTaskAPI.Tests.Tests.Identity
 
         [Fact]
         public async Task Register_InvalidEmailFormat()
-        { 
-            var command = new Register.Command { Username = "newuser", Email = "invalid-email", Password = "P@ssw0rd1" };
+        {
+            var command = new Register.Command
+            {
+                Username = TestUserConstants.New_User_Username,
+                Email = TestUserConstants.InvalidEmailFormat,
+                Password = TestUserConstants.Default_Password
+            };
+
             var validator = new Register.Command.Validator();
 
             var validationResult = await validator.ValidateAsync(command);
@@ -55,8 +65,14 @@ namespace TechnicalTaskAPI.Tests.Tests.Identity
 
         [Fact]
         public async Task Register_ShortPassword()
-        { 
-            var command = new Register.Command { Username = "newuser", Email = "newuser@example.com", Password = "short" };
+        {
+            var command = new Register.Command
+            {
+                Username = TestUserConstants.New_User_Username,
+                Email = TestUserConstants.New_User_Email,
+                Password = TestUserConstants.ShortPassword
+            };
+
             var validator = new Register.Command.Validator();
 
             var validationResult = await validator.ValidateAsync(command);
@@ -67,8 +83,14 @@ namespace TechnicalTaskAPI.Tests.Tests.Identity
 
         [Fact]
         public async Task Register_LongPassword()
-        { 
-            var command = new Register.Command { Username = "newuser", Email = "newuser@example.com", Password = new string('a', 255) };
+        {
+            var command = new Register.Command
+            {
+                Username = TestUserConstants.New_User_Username,
+                Email = TestUserConstants.New_User_Email,
+                Password = TestUserConstants.LongPassword
+            };
+
             var validator = new Register.Command.Validator();
 
             var validationResult = await validator.ValidateAsync(command);
@@ -79,8 +101,13 @@ namespace TechnicalTaskAPI.Tests.Tests.Identity
 
         [Fact]
         public async Task Register_MissingEmail()
-        { 
-            var command = new Register.Command { Username = "newuser", Password = "P@ssw0rd1" };
+        {
+            var command = new Register.Command
+            {
+                Username = TestUserConstants.New_User_Username,
+                Password = TestUserConstants.Default_Password
+            };
+
             var validator = new Register.Command.Validator();
 
             var validationResult = await validator.ValidateAsync(command);
@@ -91,8 +118,13 @@ namespace TechnicalTaskAPI.Tests.Tests.Identity
 
         [Fact]
         public async Task Register_MissingPassword()
-        { 
-            var command = new Register.Command { Username = "newuser", Email = "newuser@example.com" };
+        {
+            var command = new Register.Command
+            {
+                Username = TestUserConstants.New_User_Username,
+                Email = TestUserConstants.New_User_Email,
+            };
+
             var validator = new Register.Command.Validator();
 
             var validationResult = await validator.ValidateAsync(command);
@@ -103,8 +135,13 @@ namespace TechnicalTaskAPI.Tests.Tests.Identity
 
         [Fact]
         public async Task Register_MissingUsername()
-        { 
-            var command = new Register.Command { Email = "newuser@example.com", Password = "P@ssw0rd1" };
+        {
+            var command = new Register.Command
+            {
+                Email = TestUserConstants.New_User_Email,
+                Password = TestUserConstants.Default_Password
+            };
+
             var validator = new Register.Command.Validator();
 
             var validationResult = await validator.ValidateAsync(command);
@@ -115,8 +152,14 @@ namespace TechnicalTaskAPI.Tests.Tests.Identity
 
         [Fact]
         public async Task Register_EmptyEmail()
-        { 
-            var command = new Register.Command { Username = "newuser", Email = "", Password = "P@ssw0rd1" };
+        {
+            var command = new Register.Command
+            {
+                Username = TestUserConstants.New_User_Username,
+                Email = TestUserConstants.EmptyString,
+                Password = TestUserConstants.Default_Password
+            };
+
             var validator = new Register.Command.Validator();
 
             var validationResult = await validator.ValidateAsync(command);
@@ -127,8 +170,14 @@ namespace TechnicalTaskAPI.Tests.Tests.Identity
 
         [Fact]
         public async Task Register_EmptyPassword()
-        { 
-            var command = new Register.Command { Username = "newuser", Email = "newuser@example.com", Password = "" };
+        {
+            var command = new Register.Command
+            {
+                Username = TestUserConstants.New_User_Username,
+                Email = TestUserConstants.New_User_Email,
+                Password = TestUserConstants.EmptyString
+            };
+
             var validator = new Register.Command.Validator();
 
             var validationResult = await validator.ValidateAsync(command);
@@ -139,8 +188,14 @@ namespace TechnicalTaskAPI.Tests.Tests.Identity
 
         [Fact]
         public async Task Register_EmptyUsername()
-        { 
-            var command = new Register.Command { Username = "", Email = "newuser@example.com", Password = "P@ssw0rd1" };
+        {
+            var command = new Register.Command
+            {
+                Username = TestUserConstants.EmptyString,
+                Email = TestUserConstants.New_User_Email,
+                Password = TestUserConstants.Default_Password
+            };
+
             var validator = new Register.Command.Validator();
 
             var validationResult = await validator.ValidateAsync(command);

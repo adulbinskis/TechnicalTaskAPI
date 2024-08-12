@@ -43,23 +43,16 @@ namespace TechnicalTaskAPI.Application.Identity.Commands
                 return null;
             }
 
-            var userInDb = _context.Users.FirstOrDefault(u => u.Email == request.Email);
-            if (userInDb == null)
-            {
-                return null;
-            }
-
-            var accessToken = _tokenService.CreateToken(userInDb);
-
-            var refreshToken = await _tokenService.GenerateRefreshTokenAsync(userInDb, cancellationToken);
+            var accessToken = _tokenService.CreateToken(managedUser);
+            var refreshToken = await _tokenService.GenerateRefreshTokenAsync(managedUser, cancellationToken);
 
             await _context.SaveChangesAsync();
 
             return new AuthResponseWithTokens
             {
-                UserId = userInDb.Id,
-                Email = userInDb.Email,
-                UserName = userInDb.UserName,
+                UserId = managedUser.Id,
+                Email = managedUser.Email,
+                UserName = managedUser.UserName,
 
                 Token = accessToken.Token,
                 RefreshToken = refreshToken.Token,

@@ -101,7 +101,7 @@ namespace TechnicalTaskAPI.Application.Identity.Services
 
             _context.Users.Update(user);
 
-            await _context.SaveChangesAsync(cancellationToken);
+            await _context.SaveChangesAsync();
 
             var tokenResponse = new TokenResponse 
             {
@@ -123,9 +123,8 @@ namespace TechnicalTaskAPI.Application.Identity.Services
 
         public async Task RevokeRefreshTokenAsync(string refreshToken)
         {
-            var user = await _context.Users
-                .SingleOrDefaultAsync(
-                x => x.RefreshToken == refreshToken);
+            var userList = await _context.Users.ToListAsync();
+            var user = userList.Where(a => a.RefreshToken == refreshToken).FirstOrDefault();
 
             if (user != null)
             {

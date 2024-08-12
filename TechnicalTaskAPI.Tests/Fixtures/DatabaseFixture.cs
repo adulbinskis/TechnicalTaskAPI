@@ -7,14 +7,12 @@ using MediatR;
 using TechnicalTaskAPI.Application.Identity.Commands;
 using TechnicalTaskAPI.Application.Identity.Services;
 using Microsoft.Extensions.Configuration;
-using TechnicalTaskAPI.Application.Identity.Roles;
 
 namespace TechnicalTaskAPI.Tests.Fixtures
 {
     public class DatabaseFixture : IDisposable
     {
         public IConfiguration Configuration { get; private set; }
-
         public ServiceProvider ServiceProvider { get; private set; }
 
         public DatabaseFixture()
@@ -61,33 +59,7 @@ namespace TechnicalTaskAPI.Tests.Fixtures
             {
                 var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
                 dbContext.Database.EnsureCreated();
-                SeedData(scope.ServiceProvider).Wait();
             }
-        }
-
-        private async Task SeedData(IServiceProvider serviceProvider)
-        {
-            var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-            var dbContext = serviceProvider.GetRequiredService<ApplicationDbContext>();
-
-            var user = new ApplicationUser 
-            { 
-                UserName = "testuser", 
-                Email = "testuser@example.com", 
-                Role = Role.User, 
-                EmailConfirmed = true, 
-                TwoFactorEnabled = false, 
-                LockoutEnabled = false
-            };
-           
-            var result = await userManager.CreateAsync(user, "P@ssw0rd");
-
-            if (!result.Succeeded)
-            {
-                throw new Exception("Failed to create user in seeding");
-            }
-
-            await dbContext.SaveChangesAsync();
         }
 
         public void Dispose()
