@@ -37,12 +37,14 @@ Windows Authentication
 
 By deafult:
 appsettings.json
+
 "ConnectionStrings": {
   "DefaultConnection": "Data Source=localhost;Initial Catalog=TehnicalTaskDb;Integrated Security=True;Trust Server Certificate=True"
 },
 
 And for tests:
 DatabaseFixture.cs
+
 private readonly string _connectionString = "Data Source=localhost;Initial Catalog=TehnicalTaskDbTests;Integrated Security=True;Trust Server Certificate=True";
 
 # Install dotnet ef global:
