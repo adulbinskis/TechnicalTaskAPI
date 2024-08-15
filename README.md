@@ -13,7 +13,9 @@ https://visualstudio.microsoft.com/downloads/
 # Install Visual Studio worklands
 
 .NET 8
+
 .NET desktop development
+
 ASP.NET and web development
 
 # Install SQL server and SSMS
@@ -28,8 +30,10 @@ https://learn.microsoft.com/en-us/sql/ssms/download-sql-server-management-studio
 
 Database name:
 TehnicalTaskDb
+
 Server name:
 localhost
+
 Authentication:
 Windows Authentication
 
@@ -39,7 +43,9 @@ By deafult:
 appsettings.json
 
 "ConnectionStrings": {
+
   "DefaultConnection": "Data Source=localhost;Initial Catalog=TehnicalTaskDb;Integrated Security=True;Trust Server Certificate=True"
+  
 },
 
 And for tests:
