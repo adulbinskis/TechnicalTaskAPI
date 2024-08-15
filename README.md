@@ -61,10 +61,14 @@ dotnet tool install --global dotnet-ef
 
 # Optional
 
-Migrations: 
+Migrations:
+
 cd TechnicalTaskAPI
+
 dotnet ef migrations add AddedQandATables -c ApplicationDbContext -o ORM\Migrations
 
 Tests:
+
 Open solution dir
+
 dotnet test
