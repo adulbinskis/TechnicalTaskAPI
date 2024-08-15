@@ -20,6 +20,7 @@ ASP.NET and web development
 
 SQL server:
 https://www.microsoft.com/lv-lv/sql-server/sql-server-downloads
+
 SSMS:
 https://learn.microsoft.com/en-us/sql/ssms/download-sql-server-management-studio-ssms?view=sql-server-ver16
 
