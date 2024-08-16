@@ -17,10 +17,6 @@ namespace TechnicalTaskAPI.Application.Products.Profiles
 
         private decimal CalculatePriceWithVAT(decimal pricePerUnit, int quantity)
         {
-            var a = (quantity * pricePerUnit);
-            var b = (1 + VatRate);
-            Console.WriteLine(a);
-            Console.WriteLine(b);
             return (quantity * pricePerUnit) * (1 + VatRate);
         }
     }
