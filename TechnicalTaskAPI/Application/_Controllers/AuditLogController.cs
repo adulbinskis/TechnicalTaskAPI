@@ -11,7 +11,7 @@ namespace TechnicalTaskAPI.Application._Controllers
     public class AuditLogController : MediatRController
     {
         [HttpGet("[action]")]
-        [Authorize(Roles = "User")]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<List<AuditLogDto>>> AuditLogs([FromQuery] GetAuditLogs.Query query)
         {
             return await Mediator.Send(query);
