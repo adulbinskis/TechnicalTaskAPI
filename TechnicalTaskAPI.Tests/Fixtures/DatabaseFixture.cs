@@ -9,6 +9,8 @@ using TechnicalTaskAPI.Application.Identity.Services;
 using Microsoft.Extensions.Configuration;
 using TechnicalTaskAPI.Application.Services.Interfaces;
 using TechnicalTaskAPI.Application.Services;
+using TechnicalTaskAPI.Application.Common;
+using TechnicalTaskAPI.Application.Products.Profiles;
 
 namespace TechnicalTaskAPI.Tests.Fixtures
 {
@@ -59,6 +61,10 @@ namespace TechnicalTaskAPI.Tests.Fixtures
             serviceCollection.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Authenticate).Assembly));
             serviceCollection.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Register).Assembly));
             serviceCollection.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Product).Assembly));
+
+            // Configure VAT Rate for testing
+            var siteSettings = Configuration.GetSection("SiteSettings").Get<SiteSettings>();
+            ProductProfile.VatRate = siteSettings?.VatRate ?? 0.20m;
 
             ServiceProvider = serviceCollection.BuildServiceProvider();
 
