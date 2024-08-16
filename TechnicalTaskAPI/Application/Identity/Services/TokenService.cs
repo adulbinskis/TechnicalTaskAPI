@@ -20,7 +20,7 @@ namespace TechnicalTaskAPI.Application.Identity.Services
     public class TokenService : ITokenService
     {
         // Adjustexpiration if needed
-        private const double ExpirationMinutes = 1;
+        private const double ExpirationMinutes = 10;
         private readonly ILogger<TokenService> _logger;
         private readonly IConfiguration _configuration;
         private readonly ApplicationDbContext _context;
@@ -101,7 +101,7 @@ namespace TechnicalTaskAPI.Application.Identity.Services
 
             _context.Users.Update(user);
 
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(cancellationToken);
 
             var tokenResponse = new TokenResponse 
             {

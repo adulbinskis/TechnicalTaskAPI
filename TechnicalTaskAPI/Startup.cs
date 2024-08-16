@@ -9,6 +9,13 @@ using System.Text;
 using Microsoft.AspNetCore.Identity;
 using TechnicalTaskAPI.Application.Identity.Services;
 using System.Text.Json.Serialization;
+using TechnicalTaskAPI.Application.Services;
+using TechnicalTaskAPI.Application.Services.Interfaces;
+using TechnicalTaskAPI.Application.Products.Commands;
+//using TechnicalTaskAPI.Application.Products.Services;
+using TechnicalTaskAPI.Application.Common;
+using Microsoft.Extensions.Options;
+using TechnicalTaskAPI.Application.Products.Profiles;
 
 namespace TechnicalTaskAPI
 {
@@ -23,53 +30,12 @@ namespace TechnicalTaskAPI
 
         public void ConfigureServices(IServiceCollection services)
         {
+            services.Configure<SiteSettings>(Configuration.GetSection("SiteSettings"));
 
+            var siteSettings = Configuration.GetSection("SiteSettings").Get<SiteSettings>();
+            ProductProfile.VatRate = siteSettings.VatRate;
 
-            services.AddEndpointsApiExplorer();
-
-            services.AddSwaggerGen(options =>
-            {
-                options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-                {
-                    In = ParameterLocation.Header,
-                    Description = "Please enter a valid token",
-                    Name = "Authorization",
-                    Type = SecuritySchemeType.ApiKey,
-                    BearerFormat = "JWT",
-                    Scheme = "Bearer"
-                });
-
-                options.AddSecurityRequirement(new OpenApiSecurityRequirement
-                {
-                    {
-                        new OpenApiSecurityScheme
-                        {
-                            Reference = new OpenApiReference
-                            {
-                                Type = ReferenceType.SecurityScheme,
-                                Id = "Bearer"
-                            }
-                        },
-                        new string[] {}
-                    }
-                });
-
-                options.SwaggerDoc("v1", new OpenApiInfo { Title = "My API", Version = "v1" });
-
-                //options.MapType<CreateAnswer.Command>(() => new OpenApiSchema { Type = "object", Properties = new Dictionary<string, OpenApiSchema>() });
-                //options.MapType<UpdateAnswer.Command>(() => new OpenApiSchema { Type = "object", Properties = new Dictionary<string, OpenApiSchema>() });
-                //options.MapType<DeleteAnswer.Command>(() => new OpenApiSchema { Type = "object", Properties = new Dictionary<string, OpenApiSchema>() });
-
-                //options.MapType<CreateQuestion.Command>(() => new OpenApiSchema { Type = "object", Properties = new Dictionary<string, OpenApiSchema>() });
-                //options.MapType<UpdateQuestion.Command>(() => new OpenApiSchema { Type = "object", Properties = new Dictionary<string, OpenApiSchema>() });
-                //options.MapType<DeleteQuestion.Command>(() => new OpenApiSchema { Type = "object", Properties = new Dictionary<string, OpenApiSchema>() });
-            });
-
-
-            services.AddProblemDetails();
-            services.AddRouting(options => options.LowercaseUrls = true);
-
-            services.AddAutoMapper(typeof(Program));
+            services.AddAutoMapper(typeof(Startup));
 
             services.AddControllers().AddJsonOptions(opt =>
             {
@@ -95,43 +61,43 @@ namespace TechnicalTaskAPI
 
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IBaseEntityService, BaseEntityService>();
+            services.AddScoped<IDateTimeService, DateTimeService>();
+            services.AddScoped<IDbInitializationService, DbInitializationService>();
 
             services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
                 options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
             })
-                .AddJwtBearer(options =>
+            .AddJwtBearer(options =>
+            {
+                options.IncludeErrorDetails = true;
+                options.TokenValidationParameters = new TokenValidationParameters()
                 {
-                    options.IncludeErrorDetails = true;
-                    options.TokenValidationParameters = new TokenValidationParameters()
-                    {
-                        ClockSkew = TimeSpan.Zero,
-                        ValidateIssuer = true,
-                        ValidateAudience = true,
-                        ValidateLifetime = true,
-                        ValidateIssuerSigningKey = true,
-                        ValidIssuer = Configuration["Jwt:Issuer"],
-                        ValidAudience = Configuration["Jwt:Audience"],
-                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["Jwt:Key"])),
-                    };
+                    ClockSkew = TimeSpan.Zero,
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = Configuration["Jwt:Issuer"],
+                    ValidAudience = Configuration["Jwt:Audience"],
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["Jwt:Key"])),
+                };
 
-                    options.TokenHandlers.Add(new BearerTokenHandler());
+                options.TokenHandlers.Add(new BearerTokenHandler());
 
-                    options.Events = new JwtBearerEvents
+                options.Events = new JwtBearerEvents
+                {
+                    OnAuthenticationFailed = context =>
                     {
-                        OnAuthenticationFailed = context =>
+                        if (context.Exception.GetType() == typeof(SecurityTokenExpiredException))
                         {
-                            if (context.Exception.GetType() == typeof(SecurityTokenExpiredException))
-                            {
-                                // Token is expired
-                                // You can customize the response or behavior here
-                                context.Response.Headers.Append("Token-Expired", "true");
-                            }
-                            return Task.CompletedTask;
+                            context.Response.Headers.Append("Token-Expired", "true");
                         }
-                    };
-                });
+                        return Task.CompletedTask;
+                    }
+                };
+            });
 
             services.AddAuthorization();
 
@@ -150,6 +116,41 @@ namespace TechnicalTaskAPI
             services.AddMediatR(configuration =>
             {
                 configuration.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly());
+            });
+
+            services.AddSwaggerGen(options =>
+            {
+                options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+                {
+                    In = ParameterLocation.Header,
+                    Description = "Please enter a valid token",
+                    Name = "Authorization",
+                    Type = SecuritySchemeType.ApiKey,
+                    BearerFormat = "JWT",
+                    Scheme = "Bearer"
+                });
+
+                options.AddSecurityRequirement(new OpenApiSecurityRequirement
+            {
+                {
+                    new OpenApiSecurityScheme
+                    {
+                        Reference = new OpenApiReference
+                        {
+                            Type = ReferenceType.SecurityScheme,
+                            Id = "Bearer"
+                        }
+                    },
+                    new string[] {}
+                }
+            });
+
+                options.SwaggerDoc("v1", new OpenApiInfo { Title = "My API", Version = "v1" });
+
+                options.MapType<CreateProduct.Command>(() => new OpenApiSchema { Type = "object", Properties = new Dictionary<string, OpenApiSchema>() });
+                options.MapType<UpdateProduct.Command>(() => new OpenApiSchema { Type = "object", Properties = new Dictionary<string, OpenApiSchema>() });
+                options.MapType<DeleteProduct.Command>(() => new OpenApiSchema { Type = "object", Properties = new Dictionary<string, OpenApiSchema>() });
+
             });
 
             services.AddSwaggerGen();
@@ -178,4 +179,5 @@ namespace TechnicalTaskAPI
             });
         }
     }
+
 }

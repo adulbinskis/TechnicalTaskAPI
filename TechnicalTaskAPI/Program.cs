@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Hosting;
 using TechnicalTaskAPI.ORM.Entities;
 using TechnicalTaskAPI;
+using TechnicalTaskAPI.ORM.Services;
 
 namespace TechnicalTaskAPI
 {
@@ -18,7 +19,8 @@ namespace TechnicalTaskAPI
 
             using var scope = host.Services.CreateScope();
             var services = scope.ServiceProvider;
-
+            var dbInitializationService = services.GetRequiredService<IDbInitializationService>();
+            await dbInitializationService.SeedAdminAsync();
             await host.RunAsync();
         }
     }

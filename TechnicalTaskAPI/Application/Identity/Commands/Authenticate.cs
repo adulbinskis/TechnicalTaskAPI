@@ -46,13 +46,14 @@ namespace TechnicalTaskAPI.Application.Identity.Commands
             var accessToken = _tokenService.CreateToken(managedUser);
             var refreshToken = await _tokenService.GenerateRefreshTokenAsync(managedUser, cancellationToken);
 
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(cancellationToken);
 
             return new AuthResponseWithTokens
             {
                 UserId = managedUser.Id,
                 Email = managedUser.Email,
                 UserName = managedUser.UserName,
+                Role = managedUser.Role.ToString(),
 
                 Token = accessToken.Token,
                 RefreshToken = refreshToken.Token,

@@ -1,9 +1,11 @@
 ﻿using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using TechnicalTaskAPI.Application.Identity.Models;
 using TechnicalTaskAPI.Application.Identity.Roles;
 using TechnicalTaskAPI.ORM.Entities;
+using TechnicalTaskAPI.ORM.Services;
 
 namespace TechnicalTaskAPI.Application.Identity.Commands
 {
@@ -27,10 +29,12 @@ namespace TechnicalTaskAPI.Application.Identity.Commands
         }
 
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly ApplicationDbContext _context;
 
-        public Register(UserManager<ApplicationUser> userManager)
+        public Register(UserManager<ApplicationUser> userManager, ApplicationDbContext context)
         {
             _userManager = userManager;
+            _context = context;
         }
 
         public async Task<RegistrationResponse> Handle(Command request, CancellationToken cancellationToken)
@@ -49,6 +53,8 @@ namespace TechnicalTaskAPI.Application.Identity.Commands
 
             if (result.Succeeded)
             {
+                await _context.SaveChangesAsync(cancellationToken);
+
                 return new RegistrationResponse
                 {
                     Username = request.Username,

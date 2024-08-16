@@ -7,6 +7,8 @@ using MediatR;
 using TechnicalTaskAPI.Application.Identity.Commands;
 using TechnicalTaskAPI.Application.Identity.Services;
 using Microsoft.Extensions.Configuration;
+using TechnicalTaskAPI.Application.Services.Interfaces;
+using TechnicalTaskAPI.Application.Services;
 
 namespace TechnicalTaskAPI.Tests.Fixtures
 {
@@ -34,15 +36,14 @@ namespace TechnicalTaskAPI.Tests.Fixtures
 
             // Base Entity
             serviceCollection.AddScoped<IBaseEntityService, BaseEntityService>();
-   
+
+            // DateTimeService
+            serviceCollection.AddScoped<IDateTimeService, DateTimeService>();
 
             // Add logging
             serviceCollection.AddLogging();
 
-            //// Add DbContext
-            //serviceCollection.AddDbContext<ApplicationDbContext>(options =>
-            //    options.UseInMemoryDatabase("TestDatabase"));
-
+            // Add DbContext
             serviceCollection.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(_connectionString));
 
@@ -57,12 +58,14 @@ namespace TechnicalTaskAPI.Tests.Fixtures
             // Add MediatR Commands and Queries
             serviceCollection.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Authenticate).Assembly));
             serviceCollection.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Register).Assembly));
+            serviceCollection.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Product).Assembly));
 
             ServiceProvider = serviceCollection.BuildServiceProvider();
 
             using (var scope = ServiceProvider.CreateScope())
             {
                 var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                dbContext.Database.EnsureDeleted();
                 dbContext.Database.EnsureCreated();
             }
         }
@@ -72,10 +75,29 @@ namespace TechnicalTaskAPI.Tests.Fixtures
             using (var scope = ServiceProvider.CreateScope())
             {
                 var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-                dbContext.Database.EnsureDeleted();
+                ClearDatabase(dbContext);
             }
 
             ServiceProvider.Dispose();
+        }
+
+        private void ClearDatabase(ApplicationDbContext dbContext)
+        {
+            var tableNames = dbContext.Model.GetEntityTypes()
+                .Select(t => t.GetTableName())
+                .Distinct()
+                .ToList();
+
+            foreach (var tableName in tableNames)
+            {
+                dbContext.Database.ExecuteSqlRaw($"ALTER TABLE [{tableName}] NOCHECK CONSTRAINT ALL");
+
+                dbContext.Database.ExecuteSqlRaw($"DELETE FROM [{tableName}]");
+
+                dbContext.Database.ExecuteSqlRaw($"ALTER TABLE [{tableName}] CHECK CONSTRAINT ALL");
+            }
+
+            dbContext.SaveChanges();
         }
     }
 }

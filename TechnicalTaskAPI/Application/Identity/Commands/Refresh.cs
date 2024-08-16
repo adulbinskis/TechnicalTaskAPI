@@ -54,6 +54,7 @@ namespace TechnicalTaskAPI.Application.Identity.Commands
                 UserId = user.Id,
                 Email = user.Email,
                 UserName = user.UserName,
+                Role = user.Role.ToString(),
 
                 Token = accessToken.Token,
                 RefreshToken = refreshToken.Token,

@@ -51,26 +51,29 @@ namespace TechnicalTaskAPI.Application._Controllers
             {
                 return BadRequest("Bad credentials");
             }
-
-            var cookieOptions = new CookieOptions
+            else 
             {
-                HttpOnly = true,
-                Secure = true,
-                SameSite = SameSiteMode.None, 
-                Expires = response.RefreshTokenExpirationDate,
-            };
+                var cookieOptions = new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.None,
+                    Expires = response.RefreshTokenExpirationDate,
+                };
 
-            Response.Cookies.Append("refreshToken", response.RefreshToken, cookieOptions);
+                Response.Cookies.Append("refreshToken", response.RefreshToken, cookieOptions);
 
-            var authResponse = new AuthResponse
-            {
-                UserId = response.UserId,
-                Email = response.Email,
-                Token = response.Token,
-                UserName = response.UserName
-            };
+                var authResponse = new AuthResponse
+                {
+                    UserId = response.UserId,
+                    Email = response.Email,
+                    Token = response.Token,
+                    UserName = response.UserName,
+                    Role = response.Role
+                };
 
-            return Ok(authResponse);
+                return Ok(authResponse);
+            }
         }
 
         [HttpPost("logout")]
@@ -117,7 +120,8 @@ namespace TechnicalTaskAPI.Application._Controllers
                 UserId = response.UserId,
                 Email = response.Email,
                 Token = response.Token,
-                UserName = response.UserName
+                UserName = response.UserName,
+                Role = response.Role,
             };
 
             return authResponse;
